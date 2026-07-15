@@ -85,7 +85,7 @@ export const ACCOUNT_COLORS = [
 ];
 
 export function fmtUSD(n: number) {
-  return "$" + (Math.round(n) || 0).toLocaleString("en-US");
+  return "$" + (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function parseAmount(val: string): number {
