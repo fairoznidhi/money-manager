@@ -12,7 +12,7 @@ export default function BottomTabBar() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 bg-[#1c1c1e] border-t border-white/10">
+    <div className="safe-bottom fixed bottom-0 left-0 right-0 z-20 bg-[#1c1c1e] border-t border-white/10">
       <div className="max-w-2xl mx-auto grid grid-cols-2">
         {TABS.map((t) => {
           const active = pathname === t.href;

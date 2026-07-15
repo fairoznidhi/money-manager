@@ -4,6 +4,8 @@
 
 body { background: #1c1c1e; color: #fff; }
 
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
 @media print {
   .no-print { display: none !important; }
   body { background: white; }
