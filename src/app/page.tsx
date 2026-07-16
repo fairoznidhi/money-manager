@@ -1,7 +1,18 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Plus, Loader2, ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
-import { fmtUSD, Transaction, computeMainBalance, computeBalance } from "@/lib/supabase";
+import {
+  Plus,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
+import {
+  fmtUSD,
+  Transaction,
+  computeMainBalance,
+  computeBalance,
+} from "@/lib/supabase";
 import { useAppData } from "@/lib/AppDataContext";
 import TransactionHistory from "@/components/TransactionHistory";
 import AddTransactionScreen from "@/components/AddTransactionScreen";
@@ -67,7 +78,7 @@ export default function Home() {
     setShowHeaderAccountPicker(false);
   }
 
-  function headerAccountValue(account: typeof accounts[number]) {
+  function headerAccountValue(account: (typeof accounts)[number]) {
     const relevant = allTxns.filter(
       (t) => t.account_id === account.id || t.to_account_id === account.id,
     );
@@ -77,8 +88,10 @@ export default function Home() {
     return computeBalance(account, relevant);
   }
 
-  const headerAccount1 = accounts.find((a) => a.id === headerAccountId1) ?? null;
-  const headerAccount2 = accounts.find((a) => a.id === headerAccountId2) ?? null;
+  const headerAccount1 =
+    accounts.find((a) => a.id === headerAccountId1) ?? null;
+  const headerAccount2 =
+    accounts.find((a) => a.id === headerAccountId2) ?? null;
   const headerRemaining =
     headerAccount1 && headerAccount2
       ? headerAccountValue(headerAccount1) - headerAccountValue(headerAccount2)
@@ -123,25 +136,35 @@ export default function Home() {
         <div className="max-w-2xl mx-auto  ">
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-2xl font-extrabold tracking-tight text-blue-400 leading-none shrink-0">
-              Transaction
+              History
             </h1>
             <div className="flex items-center gap-1 min-w-0 text-sm">
               <button
-                onClick={() => { setPickingHeaderSlot(1); setShowHeaderAccountPicker(true); }}
+                onClick={() => {
+                  setPickingHeaderSlot(1);
+                  setShowHeaderAccountPicker(true);
+                }}
                 className="flex items-center gap-0.5 min-w-0 text-gray-300 hover:text-white"
               >
                 <span className="truncate">
-                  {headerAccount1?.name ?? <span className="text-gray-500">Account 1</span>}
+                  {headerAccount1?.name ?? (
+                    <span className="text-gray-500">Account 1</span>
+                  )}
                 </span>
                 <ChevronDown size={14} className="shrink-0 text-gray-500" />
               </button>
               <span className="text-gray-500 shrink-0">-</span>
               <button
-                onClick={() => { setPickingHeaderSlot(2); setShowHeaderAccountPicker(true); }}
+                onClick={() => {
+                  setPickingHeaderSlot(2);
+                  setShowHeaderAccountPicker(true);
+                }}
                 className="flex items-center gap-0.5 min-w-0 text-gray-300 hover:text-white"
               >
                 <span className="truncate">
-                  {headerAccount2?.name ?? <span className="text-gray-500">Account 2</span>}
+                  {headerAccount2?.name ?? (
+                    <span className="text-gray-500">Account 2</span>
+                  )}
                 </span>
                 <ChevronDown size={14} className="shrink-0 text-gray-500" />
               </button>
@@ -243,7 +266,9 @@ export default function Home() {
               .filter((a) => a.is_active && !a.matured)
               .map((a) => {
                 const selected =
-                  pickingHeaderSlot === 1 ? headerAccountId1 === a.id : headerAccountId2 === a.id;
+                  pickingHeaderSlot === 1
+                    ? headerAccountId1 === a.id
+                    : headerAccountId2 === a.id;
                 return (
                   <button
                     key={a.id}

@@ -54,15 +54,60 @@ export interface Category {
 export const DEFAULT_CATEGORY_ICON = "🏷️";
 
 export const ICON_CHOICES = [
-  "🚕", "🍜", "🎁", "👕", "💄", "📚",
-  "🪑", "🏥", "🏠", "🐾", "🛍️", "📦",
-  "📱", "💳", "🎬", "✈️", "⚽", "🎓",
-  "💵", "💰", "💼", "📈", "🎉", "🔧",
-  "🍔", "☕", "🍺", "🎮", "🎵", "🎨",
-  "🚗", "⛽", "🚌", "🚲", "🏋️", "💊",
-  "🧾", "💡", "📶", "🎂", "👶", "🐶",
-  "🌳", "🛒", "🍿", "📷", "💻", "🖨️",
-  "🧳", "🏦", "🪙", "📄", "🧹", "🛠️",
+  "🚕",
+  "🍜",
+  "🎁",
+  "👕",
+  "💄",
+  "📚",
+  "🪑",
+  "🏥",
+  "🏠",
+  "🐾",
+  "🛍️",
+  "📦",
+  "📱",
+  "💳",
+  "🎬",
+  "✈️",
+  "⚽",
+  "🎓",
+  "💵",
+  "💰",
+  "💼",
+  "📈",
+  "🎉",
+  "🔧",
+  "🍔",
+  "☕",
+  "🍺",
+  "🎮",
+  "🎵",
+  "🎨",
+  "🚗",
+  "⛽",
+  "🚌",
+  "🚲",
+  "🏋️",
+  "💊",
+  "🧾",
+  "💡",
+  "📶",
+  "🎂",
+  "👶",
+  "🐶",
+  "🌳",
+  "🛒",
+  "🍿",
+  "📷",
+  "💻",
+  "🖨️",
+  "🧳",
+  "🏦",
+  "🪙",
+  "📄",
+  "🧹",
+  "🛠️",
 ];
 
 export interface Transaction {
@@ -80,12 +125,22 @@ export type NewTransaction = Omit<Transaction, "id">;
 
 // ---------- Helpers ----------
 export const ACCOUNT_COLORS = [
-  "bg-blue-500", "bg-green-500", "bg-purple-500",
-  "bg-amber-500", "bg-pink-500", "bg-teal-500",
+  "bg-blue-500",
+  "bg-green-500",
+  "bg-purple-500",
+  "bg-amber-500",
+  "bg-pink-500",
+  "bg-teal-500",
 ];
 
 export function fmtUSD(n: number) {
-  return "$" + (n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (
+    "৳ " +
+    (n || 0).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+  );
 }
 
 export function parseAmount(val: string): number {
@@ -137,7 +192,12 @@ export async function addAccount(
 
 export async function updateAccount(
   id: number,
-  updates: { name?: string; type?: AccountType; opening_balance?: number; credit_limit?: number },
+  updates: {
+    name?: string;
+    type?: AccountType;
+    opening_balance?: number;
+    credit_limit?: number;
+  },
 ): Promise<Account> {
   const { data, error } = await supabase
     .from("accounts")
@@ -150,9 +210,7 @@ export async function updateAccount(
 }
 
 // Persists a new display order for a set of accounts (e.g. after drag-to-reorder).
-export async function reorderAccounts(
-  orderedIds: number[],
-): Promise<void> {
+export async function reorderAccounts(orderedIds: number[]): Promise<void> {
   await Promise.all(
     orderedIds.map((id, index) =>
       supabase.from("accounts").update({ sort_order: index }).eq("id", id),
@@ -162,7 +220,10 @@ export async function reorderAccounts(
 
 // Archives/unarchives an account: hides it from the main list while preserving
 // its transaction history, since transactions reference it by id.
-export async function setAccountActive(id: number, isActive: boolean): Promise<Account> {
+export async function setAccountActive(
+  id: number,
+  isActive: boolean,
+): Promise<Account> {
   const { data, error } = await supabase
     .from("accounts")
     .update({ is_active: isActive })
@@ -258,7 +319,11 @@ export async function getCategories(): Promise<Category[]> {
   return data ?? [];
 }
 
-export async function addCategory(type: CategoryType, name: string, icon: string): Promise<Category> {
+export async function addCategory(
+  type: CategoryType,
+  name: string,
+  icon: string,
+): Promise<Category> {
   const { data, error } = await supabase
     .from("categories")
     .insert({ type, name, icon })
@@ -283,7 +348,9 @@ export async function updateCategory(
 }
 
 // ---------- Transactions ----------
-export async function getTransactions(accountId: number): Promise<Transaction[]> {
+export async function getTransactions(
+  accountId: number,
+): Promise<Transaction[]> {
   const { data, error } = await supabase
     .from("transactions")
     .select("*")
@@ -335,10 +402,15 @@ export async function deleteTransaction(id: number): Promise<void> {
 
 // Balance = opening balance + sum(income) - sum(expense), plus transfers
 // in/out. Computed client-side from transactions touching this account.
-export function computeMainBalance(account: Account, txns: Transaction[]): number {
+export function computeMainBalance(
+  account: Account,
+  txns: Transaction[],
+): number {
   return txns.reduce((bal, t) => {
-    if (t.type === "income" && t.account_id === account.id) return bal + t.amount;
-    if (t.type === "expense" && t.account_id === account.id) return bal - t.amount;
+    if (t.type === "income" && t.account_id === account.id)
+      return bal + t.amount;
+    if (t.type === "expense" && t.account_id === account.id)
+      return bal - t.amount;
     if (t.type === "transfer") {
       if (t.account_id === account.id) return bal - t.amount;
       if (t.to_account_id === account.id) return bal + t.amount;
@@ -348,6 +420,7 @@ export function computeMainBalance(account: Account, txns: Transaction[]): numbe
 }
 
 export function computeBalance(account: Account, txns: Transaction[]): number {
-  const base = account.type === "card" ? account.credit_limit : account.opening_balance;
+  const base =
+    account.type === "card" ? account.credit_limit : account.opening_balance;
   return base + computeMainBalance(account, txns);
 }
