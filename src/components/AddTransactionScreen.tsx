@@ -227,12 +227,12 @@ export default function AddTransactionScreen({
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 px-4 py-3 shrink-0">
+      <div className="flex gap-2 px-4 py-2 shrink-0">
         {TABS.map((t) => (
           <button
             key={t.type}
             onClick={() => switchTab(t.type)}
-            className={`flex-1 py-2.5 rounded-xl text-base font-medium border transition-colors ${
+            className={`flex-1 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
               tab === t.type ? `bg-white/5 ${t.activeClass}` : "border-white/15 text-gray-400"
             }`}
           >
@@ -321,6 +321,7 @@ export default function AddTransactionScreen({
       {showKeypad && (
         <AmountKeypad
           initial={amount}
+          onChange={setAmount}
           onCancel={() => setShowKeypad(false)}
           onConfirm={(val) => { setAmount(val); setShowKeypad(false); }}
         />
@@ -337,48 +338,57 @@ export default function AddTransactionScreen({
 
       {/* Category picker overlay */}
       {showCategoryPicker && (
-        <div className="absolute inset-0 z-10 bg-[#1c1c1e] flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0 bg-[#2c2c2e]">
-            <h2 className="text-lg text-gray-200">Category</h2>
-            <div className="flex items-center gap-4">
-              <button onClick={() => setEditingCategories((v) => !v)} className="text-gray-300">
-                <Pencil size={18} />
-              </button>
-              <button onClick={() => { setShowCategoryPicker(false); setEditingCategories(false); }} className="text-gray-300">
-                <X size={20} />
-              </button>
-            </div>
-          </div>
+        <div className="absolute inset-0 z-10 flex flex-col justify-end">
+          <div
+            className="flex-1"
+            onClick={() => { setShowCategoryPicker(false); setEditingCategories(false); }}
+          />
 
-          <div className="flex-1 overflow-y-auto">
-            <div className="grid grid-cols-3">
-              {tabCategories.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    if (editingCategories) {
-                      openEditCategory(c);
-                      return;
-                    }
-                    setCategoryId(c.id);
-                    setShowCategoryPicker(false);
-                  }}
-                  className="relative flex flex-col items-center justify-center gap-1.5 py-5 border-b border-r border-white/5 text-sm text-gray-200"
-                >
-                  {editingCategories && (
-                    <Pencil size={12} className="absolute top-1.5 right-1.5 text-blue-400" />
-                  )}
-                  <span className="text-2xl">{c.icon}</span>
-                  <span className="truncate max-w-full px-2">{c.name}</span>
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[320px] relative">
+            <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
+
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
+              <h2 className="text-lg text-gray-200">Category</h2>
+              <div className="flex items-center gap-4">
+                <button onClick={() => setEditingCategories((v) => !v)} className="text-gray-300">
+                  <Pencil size={18} />
                 </button>
-              ))}
-              <button
-                onClick={() => { setEditCategoryId(null); setNewCategoryName(""); setNewCategoryIcon(ICON_CHOICES[0]); setShowNewCategory(true); }}
-                className="flex flex-col items-center justify-center gap-1.5 py-5 border-b border-r border-white/5 text-sm text-gray-400"
-              >
-                <Plus size={22} />
-                <span>New</span>
-              </button>
+                <button onClick={() => { setShowCategoryPicker(false); setEditingCategories(false); }} className="text-gray-300">
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-3">
+                {tabCategories.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      if (editingCategories) {
+                        openEditCategory(c);
+                        return;
+                      }
+                      setCategoryId(c.id);
+                      setShowCategoryPicker(false);
+                    }}
+                    className="relative h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-200"
+                  >
+                    {editingCategories && (
+                      <Pencil size={10} className="absolute top-1 right-1 text-blue-400" />
+                    )}
+                    <span className="text-sm">{c.icon}</span>
+                    <span className="truncate">{c.name}</span>
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setEditCategoryId(null); setNewCategoryName(""); setNewCategoryIcon(ICON_CHOICES[0]); setShowNewCategory(true); }}
+                  className="h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-400"
+                >
+                  <Plus size={14} />
+                  <span>New</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -444,49 +454,55 @@ export default function AddTransactionScreen({
 
       {/* Account picker overlay */}
       {showAccountPicker && (
-        <div className="absolute inset-0 z-10 bg-[#1c1c1e] flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0 bg-[#2c2c2e]">
-            <h2 className="text-lg text-gray-200">Account</h2>
-            <button onClick={() => setShowAccountPicker(false)} className="text-gray-300">
-              <X size={20} />
-            </button>
-          </div>
+        <div className="absolute inset-0 z-10 flex flex-col justify-end">
+          <div className="flex-1" onClick={() => setShowAccountPicker(false)} />
 
-          <div className="flex-1 overflow-y-auto">
-            {ACCOUNT_GROUPS.map((g) => {
-              const groupAccounts = localAccounts.filter(
-                (a) =>
-                  a.type === g.type &&
-                  a.is_active &&
-                  !a.matured &&
-                  !(tab === "transfer" && pickingFor === "to" && a.id === accountId),
-              );
-              if (groupAccounts.length === 0) return null;
-              return (
-                <div key={g.type}>
-                  <div className="px-4 py-2 border-b border-white/10 bg-white/[0.08] text-gray-400 text-sm">
-                    {g.label}
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[320px] relative">
+            <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
+
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
+              <h2 className="text-lg text-gray-200">Account</h2>
+              <button onClick={() => setShowAccountPicker(false)} className="text-gray-300">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {ACCOUNT_GROUPS.map((g) => {
+                const groupAccounts = localAccounts.filter(
+                  (a) =>
+                    a.type === g.type &&
+                    a.is_active &&
+                    !a.matured &&
+                    !(tab === "transfer" && pickingFor === "to" && a.id === accountId),
+                );
+                if (groupAccounts.length === 0) return null;
+                return (
+                  <div key={g.type}>
+                    <div className="px-4 py-1.5 border-b border-white/10 bg-white/[0.08] text-gray-400 text-xs">
+                      {g.label}
+                    </div>
+                    <div className="grid grid-cols-3">
+                      {groupAccounts.map((a) => (
+                        <button
+                          key={a.id}
+                          onClick={() => chooseAccount(a.id)}
+                          className="h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-200"
+                        >
+                          <span className="truncate">{a.name}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3">
-                    {groupAccounts.map((a) => (
-                      <button
-                        key={a.id}
-                        onClick={() => chooseAccount(a.id)}
-                        className="flex items-center justify-center py-6 border-b border-r border-white/5 text-sm text-gray-200 text-center px-2"
-                      >
-                        {a.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-            <button
-              onClick={() => { setNewAccountName(""); setShowNewAccount(true); }}
-              className="w-full flex items-center justify-center py-6 border-b border-white/5 text-sm text-gray-400"
-            >
-              Add
-            </button>
+                );
+              })}
+              <button
+                onClick={() => { setNewAccountName(""); setShowNewAccount(true); }}
+                className="h-14 w-full flex items-center justify-center gap-1.5 border-b border-white/5 text-xs text-gray-400"
+              >
+                Add
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -549,9 +565,9 @@ function Row({
   return (
     <Tag
       onClick={onClick}
-      className="w-full flex items-center justify-between py-3.5 border-b border-white/10 text-left"
+      className="w-full flex items-center justify-between py-3 border-b border-white/10 text-left"
     >
-      <span className="text-gray-400 text-base">{label}</span>
+      <span className="text-gray-400 text-sm">{label}</span>
       <div className="flex-1 max-w-[65%] text-right">{children}</div>
     </Tag>
   );

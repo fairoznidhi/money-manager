@@ -31,9 +31,21 @@ interface Props {
 }
 
 const TABS: { type: TransactionType; label: string; activeClass: string }[] = [
-  { type: "income", label: "Income", activeClass: "border-green-500 text-green-500" },
-  { type: "expense", label: "Expense", activeClass: "border-red-500 text-red-500" },
-  { type: "transfer", label: "Transfer", activeClass: "border-blue-500 text-blue-500" },
+  {
+    type: "income",
+    label: "Income",
+    activeClass: "border-green-500 text-green-500",
+  },
+  {
+    type: "expense",
+    label: "Expense",
+    activeClass: "border-red-500 text-red-500",
+  },
+  {
+    type: "transfer",
+    label: "Transfer",
+    activeClass: "border-blue-500 text-blue-500",
+  },
 ];
 
 function fmtDate(iso: string) {
@@ -61,7 +73,9 @@ export default function EditTransactionScreen({
   const [amount, setAmount] = useState(String(txn.amount));
   const [categoryId, setCategoryId] = useState<number | null>(txn.category_id);
   const [accountId, setAccountId] = useState<number | null>(txn.account_id);
-  const [toAccountId, setToAccountId] = useState<number | null>(txn.to_account_id);
+  const [toAccountId, setToAccountId] = useState<number | null>(
+    txn.to_account_id,
+  );
   const [note, setNote] = useState(txn.note ?? "");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -139,11 +153,20 @@ export default function EditTransactionScreen({
     setSavingCategory(true);
     try {
       if (editCategoryId != null) {
-        const c = await updateCategory(editCategoryId, { name, icon: newCategoryIcon });
-        setLocalCategories(localCategories.map((cat) => (cat.id === c.id ? c : cat)));
+        const c = await updateCategory(editCategoryId, {
+          name,
+          icon: newCategoryIcon,
+        });
+        setLocalCategories(
+          localCategories.map((cat) => (cat.id === c.id ? c : cat)),
+        );
         onCategoryUpdated(c);
       } else {
-        const c = await addCategory(tab as "income" | "expense", name, newCategoryIcon);
+        const c = await addCategory(
+          tab as "income" | "expense",
+          name,
+          newCategoryIcon,
+        );
         setLocalCategories([...localCategories, c]);
         setCategoryId(c.id);
         onCategoryCreated(c);
@@ -181,7 +204,8 @@ export default function EditTransactionScreen({
     if (!name || savingAccount) return;
     setSavingAccount(true);
     try {
-      const color = ACCOUNT_COLORS[localAccounts.length % ACCOUNT_COLORS.length];
+      const color =
+        ACCOUNT_COLORS[localAccounts.length % ACCOUNT_COLORS.length];
       const a = await addAccount(name, color);
       setLocalAccounts([...localAccounts, a]);
       chooseAccount(a.id);
@@ -198,22 +222,29 @@ export default function EditTransactionScreen({
     <div className="fixed inset-0 z-50 bg-[#1c1c1e] text-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
-        <button onClick={onClose} className="flex items-center gap-0.5 text-gray-300">
+        <button
+          onClick={onClose}
+          className="flex items-center gap-0.5 text-gray-300"
+        >
           <ChevronLeft size={22} />
           <span className="text-base">Trans.</span>
         </button>
-        <h1 className="text-lg font-semibold">{TABS.find((t) => t.type === tab)!.label}</h1>
+        <h1 className="text-lg font-semibold">
+          {TABS.find((t) => t.type === tab)!.label}
+        </h1>
         <div className="w-14" />
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 px-4 py-3 shrink-0">
+      <div className="flex gap-2 px-4 py-2 shrink-0">
         {TABS.map((t) => (
           <button
             key={t.type}
             onClick={() => switchTab(t.type)}
-            className={`flex-1 py-2.5 rounded-xl text-base font-medium border transition-colors ${
-              tab === t.type ? `bg-white/5 ${t.activeClass}` : "border-white/15 text-gray-400"
+            className={`flex-1 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+              tab === t.type
+                ? `bg-white/5 ${t.activeClass}`
+                : "border-white/15 text-gray-400"
             }`}
           >
             {t.label}
@@ -237,12 +268,16 @@ export default function EditTransactionScreen({
           <>
             <Row label="From" onClick={() => openAccountPicker("account")}>
               <span className="text-base text-white">
-                {selectedAccount?.name ?? <span className="text-gray-600">Select</span>}
+                {selectedAccount?.name ?? (
+                  <span className="text-gray-600">Select</span>
+                )}
               </span>
             </Row>
             <Row label="To" onClick={() => openAccountPicker("to")}>
               <span className="text-base text-white">
-                {selectedToAccount?.name ?? <span className="text-gray-600">Select</span>}
+                {selectedToAccount?.name ?? (
+                  <span className="text-gray-600">Select</span>
+                )}
               </span>
             </Row>
           </>
@@ -263,7 +298,9 @@ export default function EditTransactionScreen({
 
             <Row label="Account" onClick={() => openAccountPicker("account")}>
               <span className="text-base text-white">
-                {selectedAccount?.name ?? <span className="text-gray-600">Select</span>}
+                {selectedAccount?.name ?? (
+                  <span className="text-gray-600">Select</span>
+                )}
               </span>
             </Row>
           </>
@@ -299,8 +336,12 @@ export default function EditTransactionScreen({
       {showKeypad && (
         <AmountKeypad
           initial={amount}
+          onChange={setAmount}
           onCancel={() => setShowKeypad(false)}
-          onConfirm={(val) => { setAmount(val); setShowKeypad(false); }}
+          onConfirm={(val) => {
+            setAmount(val);
+            setShowKeypad(false);
+          }}
         />
       )}
 
@@ -309,54 +350,86 @@ export default function EditTransactionScreen({
         <DatePicker
           initial={date}
           onCancel={() => setShowDatePicker(false)}
-          onConfirm={(iso) => { setDate(iso); setShowDatePicker(false); }}
+          onConfirm={(iso) => {
+            setDate(iso);
+            setShowDatePicker(false);
+          }}
         />
       )}
 
       {/* Category picker overlay */}
       {showCategoryPicker && (
-        <div className="absolute inset-0 z-10 bg-[#1c1c1e] flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0 bg-[#2c2c2e]">
-            <h2 className="text-lg text-gray-200">Category</h2>
-            <div className="flex items-center gap-4">
-              <button onClick={() => setEditingCategories((v) => !v)} className="text-gray-300">
-                <Pencil size={18} />
-              </button>
-              <button onClick={() => { setShowCategoryPicker(false); setEditingCategories(false); }} className="text-gray-300">
-                <X size={20} />
-              </button>
-            </div>
-          </div>
+        <div className="absolute inset-0 z-10 flex flex-col justify-end">
+          <div
+            className="flex-1"
+            onClick={() => {
+              setShowCategoryPicker(false);
+              setEditingCategories(false);
+            }}
+          />
 
-          <div className="flex-1 overflow-y-auto">
-            <div className="grid grid-cols-3">
-              {tabCategories.map((c) => (
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[320px] relative">
+            <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
+
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
+              <h2 className="text-lg text-gray-200">Category</h2>
+              <div className="flex items-center gap-4">
                 <button
-                  key={c.id}
-                  onClick={() => {
-                    if (editingCategories) {
-                      openEditCategory(c);
-                      return;
-                    }
-                    setCategoryId(c.id);
-                    setShowCategoryPicker(false);
-                  }}
-                  className="relative flex flex-col items-center justify-center gap-1.5 py-5 border-b border-r border-white/5 text-sm text-gray-200"
+                  onClick={() => setEditingCategories((v) => !v)}
+                  className="text-gray-300"
                 >
-                  {editingCategories && (
-                    <Pencil size={12} className="absolute top-1.5 right-1.5 text-blue-400" />
-                  )}
-                  <span className="text-2xl">{c.icon}</span>
-                  <span className="truncate max-w-full px-2">{c.name}</span>
+                  <Pencil size={18} />
                 </button>
-              ))}
-              <button
-                onClick={() => { setEditCategoryId(null); setNewCategoryName(""); setNewCategoryIcon(ICON_CHOICES[0]); setShowNewCategory(true); }}
-                className="flex flex-col items-center justify-center gap-1.5 py-5 border-b border-r border-white/5 text-sm text-gray-400"
-              >
-                <Plus size={22} />
-                <span>New</span>
-              </button>
+                <button
+                  onClick={() => {
+                    setShowCategoryPicker(false);
+                    setEditingCategories(false);
+                  }}
+                  className="text-gray-300"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-3">
+                {tabCategories.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      if (editingCategories) {
+                        openEditCategory(c);
+                        return;
+                      }
+                      setCategoryId(c.id);
+                      setShowCategoryPicker(false);
+                    }}
+                    className="relative h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-200"
+                  >
+                    {editingCategories && (
+                      <Pencil
+                        size={10}
+                        className="absolute top-1 right-1 text-blue-400"
+                      />
+                    )}
+                    <span className="text-sm">{c.icon}</span>
+                    <span className="truncate">{c.name}</span>
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    setEditCategoryId(null);
+                    setNewCategoryName("");
+                    setNewCategoryIcon(ICON_CHOICES[0]);
+                    setShowNewCategory(true);
+                  }}
+                  className="h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-400"
+                >
+                  <Plus size={14} />
+                  <span>New</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -366,14 +439,21 @@ export default function EditTransactionScreen({
       {showNewCategory && (
         <div
           className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 px-4"
-          onClick={() => { if (!savingCategory) { setShowNewCategory(false); setEditCategoryId(null); } }}
+          onClick={() => {
+            if (!savingCategory) {
+              setShowNewCategory(false);
+              setEditCategoryId(null);
+            }
+          }}
         >
           <div
             className="bg-[#2c2c2e] rounded-2xl p-6 w-full max-w-sm"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-bold mb-4 capitalize">
-              {editCategoryId != null ? `Edit ${tab} category` : `New ${tab} category`}
+              {editCategoryId != null
+                ? `Edit ${tab} category`
+                : `New ${tab} category`}
             </h3>
 
             <div className="mb-4">
@@ -402,7 +482,10 @@ export default function EditTransactionScreen({
 
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => { setShowNewCategory(false); setEditCategoryId(null); }}
+                onClick={() => {
+                  setShowNewCategory(false);
+                  setEditCategoryId(null);
+                }}
                 disabled={savingCategory}
                 className="px-4 py-2.5 rounded-lg border border-white/15 text-gray-300 disabled:opacity-40"
               >
@@ -413,7 +496,11 @@ export default function EditTransactionScreen({
                 disabled={!newCategoryName.trim() || savingCategory}
                 className="px-4 py-2.5 rounded-lg bg-blue-600 text-white font-bold disabled:opacity-40"
               >
-                {savingCategory ? "Saving..." : editCategoryId != null ? "Save" : "Add"}
+                {savingCategory
+                  ? "Saving..."
+                  : editCategoryId != null
+                    ? "Save"
+                    : "Add"}
               </button>
             </div>
           </div>
@@ -422,33 +509,52 @@ export default function EditTransactionScreen({
 
       {/* Account picker overlay */}
       {showAccountPicker && (
-        <div className="absolute inset-0 z-10 bg-[#1c1c1e] flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0 bg-[#2c2c2e]">
-            <h2 className="text-lg text-gray-200">Account</h2>
-            <button onClick={() => setShowAccountPicker(false)} className="text-gray-300">
-              <X size={20} />
-            </button>
-          </div>
+        <div className="absolute inset-0 z-10 flex flex-col justify-end">
+          <div className="flex-1" onClick={() => setShowAccountPicker(false)} />
 
-          <div className="flex-1 overflow-y-auto">
-            <div className="grid grid-cols-3">
-              {localAccounts
-                .filter((a) => !(tab === "transfer" && pickingFor === "to" && a.id === accountId))
-                .map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => chooseAccount(a.id)}
-                    className="flex items-center justify-center py-6 border-b border-r border-white/5 text-sm text-gray-200 text-center px-2"
-                  >
-                    {a.name}
-                  </button>
-                ))}
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[320px] relative">
+            <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
+
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
+              <h2 className="text-lg text-gray-200">Account</h2>
               <button
-                onClick={() => { setNewAccountName(""); setShowNewAccount(true); }}
-                className="flex items-center justify-center py-6 border-b border-r border-white/5 text-sm text-gray-400"
+                onClick={() => setShowAccountPicker(false)}
+                className="text-gray-300"
               >
-                Add
+                <X size={20} />
               </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <div className="grid grid-cols-3">
+                {localAccounts
+                  .filter(
+                    (a) =>
+                      !(
+                        tab === "transfer" &&
+                        pickingFor === "to" &&
+                        a.id === accountId
+                      ),
+                  )
+                  .map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => chooseAccount(a.id)}
+                      className="h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-200"
+                    >
+                      <span className="truncate">{a.name}</span>
+                    </button>
+                  ))}
+                <button
+                  onClick={() => {
+                    setNewAccountName("");
+                    setShowNewAccount(true);
+                  }}
+                  className="h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-400"
+                >
+                  Add
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -458,7 +564,9 @@ export default function EditTransactionScreen({
       {showNewAccount && (
         <div
           className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 px-4"
-          onClick={() => { if (!savingAccount) setShowNewAccount(false); }}
+          onClick={() => {
+            if (!savingAccount) setShowNewAccount(false);
+          }}
         >
           <div
             className="bg-[#2c2c2e] rounded-2xl p-6 w-full max-w-sm"
@@ -500,13 +608,20 @@ export default function EditTransactionScreen({
       {confirmDelete && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
-          onClick={() => { if (!deleting) setConfirmDelete(false); }}
+          onClick={() => {
+            if (!deleting) setConfirmDelete(false);
+          }}
         >
-          <div className="bg-[#2c2c2e] rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="bg-[#2c2c2e] rounded-2xl p-6 w-full max-w-sm shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
               <Trash2 size={18} className="text-red-400" /> Delete transaction?
             </h3>
-            <p className="text-gray-400 mb-6">This transaction will be removed.</p>
+            <p className="text-gray-400 mb-6">
+              This transaction will be removed.
+            </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setConfirmDelete(false)}
@@ -543,9 +658,9 @@ function Row({
   return (
     <Tag
       onClick={onClick}
-      className="w-full flex items-center justify-between py-3.5 border-b border-white/10 text-left"
+      className="w-full flex items-center justify-between py-3 border-b border-white/10 text-left"
     >
-      <span className="text-gray-400 text-base">{label}</span>
+      <span className="text-gray-400 text-sm">{label}</span>
       <div className="flex-1 max-w-[65%] text-right">{children}</div>
     </Tag>
   );

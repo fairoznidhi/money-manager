@@ -124,6 +124,7 @@ export default function MatureAccountSheet({
       {showPrincipalKeypad && (
         <AmountKeypad
           initial={principal}
+          onChange={setPrincipal}
           onCancel={() => setShowPrincipalKeypad(false)}
           onConfirm={(val) => { setPrincipal(val); setShowPrincipalKeypad(false); }}
         />
@@ -132,6 +133,7 @@ export default function MatureAccountSheet({
       {showInterestKeypad && (
         <AmountKeypad
           initial={interest}
+          onChange={setInterest}
           onCancel={() => setShowInterestKeypad(false)}
           onConfirm={(val) => { setInterest(val); setShowInterestKeypad(false); }}
         />
