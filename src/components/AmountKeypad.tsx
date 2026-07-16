@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { X } from "lucide-react";
 
 interface Props {
@@ -55,15 +55,36 @@ const isOperator = (k: string) => k === "+" || k === "-" || k === "×" || k === 
 
 export default function AmountKeypad({ initial, onCancel, onConfirm, onChange }: Props) {
   const [expr, setExpr] = useState(initial);
+  const exprRef = useRef(expr);
+  exprRef.current = expr;
+  const holdTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function update(next: string) {
     setExpr(next);
     onChange?.(next);
   }
 
+  function backspace() {
+    update(exprRef.current.slice(0, -1));
+  }
+
+  function startBackspaceHold() {
+    holdTimeout.current = setTimeout(() => {
+      holdInterval.current = setInterval(backspace, 80);
+    }, 400);
+  }
+
+  function stopBackspaceHold() {
+    if (holdTimeout.current) clearTimeout(holdTimeout.current);
+    if (holdInterval.current) clearInterval(holdInterval.current);
+    holdTimeout.current = null;
+    holdInterval.current = null;
+  }
+
   function press(key: string) {
     if (key === "⌫") {
-      update(expr.slice(0, -1));
+      backspace();
       return;
     }
     if (key === "=") {
@@ -89,7 +110,7 @@ export default function AmountKeypad({ initial, onCancel, onConfirm, onChange }:
     <div className="absolute inset-0 z-30 flex flex-col justify-end">
       <div className="flex-1" onClick={onCancel} />
 
-      <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl relative">
+      <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[440px] relative">
         <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
 
         <div className="flex items-center justify-end px-4 pt-4 pb-2">
@@ -98,14 +119,18 @@ export default function AmountKeypad({ initial, onCancel, onConfirm, onChange }:
           </button>
         </div>
 
-        <div className="grid grid-rows-5 gap-px bg-white/5">
+        <div className="flex-1 flex flex-col justify-center gap-px bg-white/5">
           {KEYS.map((row, i) => (
             <div key={i} className="grid grid-cols-4 gap-px">
               {row.map((k) => (
                 <button
                   key={k}
                   onClick={() => press(k)}
-                  className={`h-14 text-lg flex items-center justify-center active:scale-95 transition-transform ${
+                  onPointerDown={k === "⌫" ? startBackspaceHold : undefined}
+                  onPointerUp={k === "⌫" ? stopBackspaceHold : undefined}
+                  onPointerLeave={k === "⌫" ? stopBackspaceHold : undefined}
+                  style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
+                  className={`h-[4.5rem] text-lg flex items-center justify-center select-none touch-none ${
                     isOperator(k)
                       ? "bg-[#2c2c2e] text-blue-400 font-medium"
                       : k === "⌫"
@@ -122,14 +147,16 @@ export default function AmountKeypad({ initial, onCancel, onConfirm, onChange }:
             <div className="bg-[#2c2c2e]" />
             <button
               onClick={() => press("0")}
-              className="h-14 text-lg flex items-center justify-center bg-[#1c1c1e] text-white active:scale-95 transition-transform"
+              style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
+              className="h-[4.5rem] text-lg flex items-center justify-center bg-[#1c1c1e] text-white select-none touch-none"
             >
               0
             </button>
             <div className="bg-[#2c2c2e]" />
             <button
               onClick={confirm}
-              className="h-14 text-base font-bold flex items-center justify-center bg-red-500 text-white active:scale-95 transition-transform"
+              style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none" }}
+              className="h-[4.5rem] text-base font-bold flex items-center justify-center bg-red-500 text-white select-none touch-none"
             >
               OK
             </button>

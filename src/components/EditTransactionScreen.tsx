@@ -194,9 +194,14 @@ export default function EditTransactionScreen({
   }
 
   function chooseAccount(id: number) {
-    if (pickingFor === "account") setAccountId(id);
-    else setToAccountId(id);
-    setShowAccountPicker(false);
+    if (pickingFor === "account") {
+      setAccountId(id);
+      setShowAccountPicker(false);
+      if (tab === "transfer") openAccountPicker("to");
+    } else {
+      setToAccountId(id);
+      setShowAccountPicker(false);
+    }
   }
 
   async function handleCreateAccount() {
@@ -254,11 +259,11 @@ export default function EditTransactionScreen({
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto px-4">
-        <Row label="Date" onClick={() => setShowDatePicker(true)}>
+        <Row label="Date" onClick={() => setShowDatePicker(true)} active={showDatePicker}>
           <span className="text-base text-white">{fmtDate(date)}</span>
         </Row>
 
-        <Row label="Amount" onClick={() => setShowKeypad(true)}>
+        <Row label="Amount" onClick={() => setShowKeypad(true)} active={showKeypad}>
           <span className="text-base text-white">
             {amount || <span className="text-gray-600">0</span>}
           </span>
@@ -266,14 +271,22 @@ export default function EditTransactionScreen({
 
         {tab === "transfer" ? (
           <>
-            <Row label="From" onClick={() => openAccountPicker("account")}>
+            <Row
+              label="From"
+              onClick={() => openAccountPicker("account")}
+              active={showAccountPicker && pickingFor === "account"}
+            >
               <span className="text-base text-white">
                 {selectedAccount?.name ?? (
                   <span className="text-gray-600">Select</span>
                 )}
               </span>
             </Row>
-            <Row label="To" onClick={() => openAccountPicker("to")}>
+            <Row
+              label="To"
+              onClick={() => openAccountPicker("to")}
+              active={showAccountPicker && pickingFor === "to"}
+            >
               <span className="text-base text-white">
                 {selectedToAccount?.name ?? (
                   <span className="text-gray-600">Select</span>
@@ -283,7 +296,7 @@ export default function EditTransactionScreen({
           </>
         ) : (
           <>
-            <Row label="Category" onClick={() => setShowCategoryPicker(true)}>
+            <Row label="Category" onClick={() => setShowCategoryPicker(true)} active={showCategoryPicker}>
               <span className="text-base text-white flex items-center justify-end gap-1.5">
                 {selectedCategory ? (
                   <>
@@ -296,7 +309,11 @@ export default function EditTransactionScreen({
               </span>
             </Row>
 
-            <Row label="Account" onClick={() => openAccountPicker("account")}>
+            <Row
+              label="Account"
+              onClick={() => openAccountPicker("account")}
+              active={showAccountPicker && pickingFor === "account"}
+            >
               <span className="text-base text-white">
                 {selectedAccount?.name ?? (
                   <span className="text-gray-600">Select</span>
@@ -341,6 +358,8 @@ export default function EditTransactionScreen({
           onConfirm={(val) => {
             setAmount(val);
             setShowKeypad(false);
+            if (tab === "transfer") openAccountPicker("account");
+            else setShowCategoryPicker(true);
           }}
         />
       )}
@@ -353,6 +372,7 @@ export default function EditTransactionScreen({
           onConfirm={(iso) => {
             setDate(iso);
             setShowDatePicker(false);
+            setShowKeypad(true);
           }}
         />
       )}
@@ -368,7 +388,7 @@ export default function EditTransactionScreen({
             }}
           />
 
-          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[320px] relative">
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[440px] relative">
             <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
 
             <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
@@ -404,6 +424,7 @@ export default function EditTransactionScreen({
                       }
                       setCategoryId(c.id);
                       setShowCategoryPicker(false);
+                      openAccountPicker("account");
                     }}
                     className="relative h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-200"
                   >
@@ -512,7 +533,7 @@ export default function EditTransactionScreen({
         <div className="absolute inset-0 z-10 flex flex-col justify-end">
           <div className="flex-1" onClick={() => setShowAccountPicker(false)} />
 
-          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[320px] relative">
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[440px] relative">
             <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
 
             <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
@@ -649,16 +670,20 @@ function Row({
   label,
   children,
   onClick,
+  active,
 }: {
   label: string;
   children: React.ReactNode;
   onClick?: () => void;
+  active?: boolean;
 }) {
   const Tag = onClick ? "button" : "div";
   return (
     <Tag
       onClick={onClick}
-      className="w-full flex items-center justify-between py-3 border-b border-white/10 text-left"
+      className={`w-full flex items-center justify-between py-3 border-b text-left transition-colors ${
+        active ? "border-red-500" : "border-white/10"
+      }`}
     >
       <span className="text-gray-400 text-sm">{label}</span>
       <div className="flex-1 max-w-[65%] text-right">{children}</div>

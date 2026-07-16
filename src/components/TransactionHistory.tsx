@@ -128,7 +128,7 @@ function TxnRow({
     >
       <span className="w-5 text-center text-sm shrink-0">{icon ?? ""}</span>
       <div className="flex-1 min-w-0">
-        <div className="text-xs text-white truncate">{title}</div>
+        <div className="text-[13px] text-white truncate">{title}</div>
         <div className="text-[11px] text-gray-500 truncate">{subtitle}</div>
       </div>
       {txn.note && (
@@ -136,7 +136,7 @@ function TxnRow({
           {txn.note}
         </span>
       )}
-      <span className={`text-xs shrink-0 ${amountColor}`}>
+      <span className={`text-[13px] shrink-0 ${amountColor}`}>
         {sign}
         {fmtUSD(txn.amount)}
       </span>

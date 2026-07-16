@@ -72,74 +72,80 @@ export default function DatePicker({ initial, onCancel, onConfirm }: Props) {
   }
 
   return (
-    <div className="absolute inset-0 z-10 bg-[#1c1c1e] flex flex-col">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0 bg-[#2c2c2e]">
-        <h2 className="text-lg text-gray-200">Date</h2>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => onConfirm(today)}
-            className="text-blue-400 text-base"
-          >
-            Today
+    <div className="absolute inset-0 z-10 flex flex-col justify-end">
+      <div className="flex-1" onClick={onCancel} />
+
+      <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[440px] relative">
+        <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
+
+        <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
+          <h2 className="text-lg text-gray-200">Date</h2>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => onConfirm(today)}
+              className="text-blue-400 text-base"
+            >
+              Today
+            </button>
+            <button onClick={onCancel} className="text-gray-300">
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between px-4 py-3">
+          <button onClick={() => changeMonth(-1)} className="text-gray-300 p-1">
+            <ChevronLeft size={20} />
           </button>
-          <button onClick={onCancel} className="text-gray-300">
-            <X size={20} />
+          <span className="text-base font-medium text-white">
+            {MONTH_NAMES[viewMonth]} {viewYear}
+          </span>
+          <button onClick={() => changeMonth(1)} className="text-gray-300 p-1">
+            <ChevronRight size={20} />
           </button>
         </div>
-      </div>
 
-      <div className="flex items-center justify-between px-4 py-3">
-        <button onClick={() => changeMonth(-1)} className="text-gray-300 p-1">
-          <ChevronLeft size={20} />
-        </button>
-        <span className="text-base font-medium text-white">
-          {MONTH_NAMES[viewMonth]} {viewYear}
-        </span>
-        <button onClick={() => changeMonth(1)} className="text-gray-300 p-1">
-          <ChevronRight size={20} />
-        </button>
-      </div>
+        <div className="grid grid-cols-7 px-2 text-center text-sm text-gray-400 pb-1">
+          {WEEKDAYS.map((w, i) => (
+            <span key={w} className={i === 5 ? "text-blue-400" : i === 6 ? "text-red-400" : ""}>
+              {w}
+            </span>
+          ))}
+        </div>
 
-      <div className="grid grid-cols-7 px-2 text-center text-sm text-gray-400 pb-1">
-        {WEEKDAYS.map((w, i) => (
-          <span key={w} className={i === 5 ? "text-blue-400" : i === 6 ? "text-red-400" : ""}>
-            {w}
-          </span>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 px-2">
-        {cells.map((c, i) => {
-          const iso = toIso(c.y, c.m, c.day);
-          const isSelected = iso === initial;
-          const isToday = iso === today;
-          const weekday = i % 7;
-          const weekendClass = c.muted
-            ? "text-gray-700"
-            : weekday === 5
-              ? "text-blue-400"
-              : weekday === 6
-                ? "text-red-400"
-                : "text-white";
-          const circleClass = isSelected
-            ? "bg-white text-black font-semibold"
-            : isToday
-              ? `border border-blue-400 ${weekendClass}`
-              : weekendClass;
-          return (
-            <button
-              key={i}
-              onClick={() => onConfirm(iso)}
-              className="aspect-square flex items-center justify-center"
-            >
-              <span
-                className={`w-9 h-9 flex items-center justify-center rounded-full text-base ${circleClass}`}
+        <div className="grid grid-cols-7 px-2 flex-1">
+          {cells.map((c, i) => {
+            const iso = toIso(c.y, c.m, c.day);
+            const isSelected = iso === initial;
+            const isToday = iso === today;
+            const weekday = i % 7;
+            const weekendClass = c.muted
+              ? "text-gray-700"
+              : weekday === 5
+                ? "text-blue-400"
+                : weekday === 6
+                  ? "text-red-400"
+                  : "text-white";
+            const circleClass = isSelected
+              ? "bg-white text-black font-semibold"
+              : isToday
+                ? `border border-blue-400 ${weekendClass}`
+                : weekendClass;
+            return (
+              <button
+                key={i}
+                onClick={() => onConfirm(iso)}
+                className="aspect-square flex items-center justify-center"
               >
-                {c.day}
-              </span>
-            </button>
-          );
-        })}
+                <span
+                  className={`w-9 h-9 flex items-center justify-center rounded-full text-base ${circleClass}`}
+                >
+                  {c.day}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

@@ -191,9 +191,14 @@ export default function AddTransactionScreen({
   }
 
   function chooseAccount(id: number) {
-    if (pickingFor === "account") setAccountId(id);
-    else setToAccountId(id);
-    setShowAccountPicker(false);
+    if (pickingFor === "account") {
+      setAccountId(id);
+      setShowAccountPicker(false);
+      if (tab === "transfer") openAccountPicker("to");
+    } else {
+      setToAccountId(id);
+      setShowAccountPicker(false);
+    }
   }
 
   async function handleCreateAccount() {
@@ -243,11 +248,11 @@ export default function AddTransactionScreen({
 
       {/* Form */}
       <div className="flex-1 overflow-y-auto px-4">
-        <Row label="Date" onClick={() => setShowDatePicker(true)}>
+        <Row label="Date" onClick={() => setShowDatePicker(true)} active={showDatePicker}>
           <span className="text-base text-white">{fmtDate(date)}</span>
         </Row>
 
-        <Row label="Amount" onClick={() => setShowKeypad(true)}>
+        <Row label="Amount" onClick={() => setShowKeypad(true)} active={showKeypad}>
           <span className="text-base text-white">
             {amount || <span className="text-gray-600">0</span>}
           </span>
@@ -255,12 +260,20 @@ export default function AddTransactionScreen({
 
         {tab === "transfer" ? (
           <>
-            <Row label="From" onClick={() => openAccountPicker("account")}>
+            <Row
+              label="From"
+              onClick={() => openAccountPicker("account")}
+              active={showAccountPicker && pickingFor === "account"}
+            >
               <span className="text-base text-white">
                 {selectedAccount?.name ?? <span className="text-gray-600">Select</span>}
               </span>
             </Row>
-            <Row label="To" onClick={() => openAccountPicker("to")}>
+            <Row
+              label="To"
+              onClick={() => openAccountPicker("to")}
+              active={showAccountPicker && pickingFor === "to"}
+            >
               <span className="text-base text-white">
                 {selectedToAccount?.name ?? <span className="text-gray-600">Select</span>}
               </span>
@@ -268,7 +281,7 @@ export default function AddTransactionScreen({
           </>
         ) : (
           <>
-            <Row label="Category" onClick={() => setShowCategoryPicker(true)}>
+            <Row label="Category" onClick={() => setShowCategoryPicker(true)} active={showCategoryPicker}>
               <span className="text-base text-white flex items-center justify-end gap-1.5">
                 {selectedCategory ? (
                   <>
@@ -281,7 +294,11 @@ export default function AddTransactionScreen({
               </span>
             </Row>
 
-            <Row label="Account" onClick={() => openAccountPicker("account")}>
+            <Row
+              label="Account"
+              onClick={() => openAccountPicker("account")}
+              active={showAccountPicker && pickingFor === "account"}
+            >
               <span className="text-base text-white">
                 {selectedAccount?.name ?? <span className="text-gray-600">Select</span>}
               </span>
@@ -301,18 +318,18 @@ export default function AddTransactionScreen({
 
         <div className="py-6 flex gap-3">
           <button
-            onClick={handleSave}
-            disabled={!canSave || saving}
-            className="flex-1 py-3.5 rounded-xl bg-blue-600 text-white text-base font-bold disabled:opacity-40"
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
-          <button
             onClick={handleSaveAndContinue}
             disabled={!canSave || saving}
             className="flex-1 py-3.5 rounded-xl border border-white/20 text-white text-base font-bold disabled:opacity-40"
           >
             Continue
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!canSave || saving}
+            className="flex-1 py-3.5 rounded-xl bg-blue-600 text-white text-base font-bold disabled:opacity-40"
+          >
+            {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
@@ -323,7 +340,12 @@ export default function AddTransactionScreen({
           initial={amount}
           onChange={setAmount}
           onCancel={() => setShowKeypad(false)}
-          onConfirm={(val) => { setAmount(val); setShowKeypad(false); }}
+          onConfirm={(val) => {
+            setAmount(val);
+            setShowKeypad(false);
+            if (tab === "transfer") openAccountPicker("account");
+            else setShowCategoryPicker(true);
+          }}
         />
       )}
 
@@ -332,7 +354,7 @@ export default function AddTransactionScreen({
         <DatePicker
           initial={date}
           onCancel={() => setShowDatePicker(false)}
-          onConfirm={(iso) => { setDate(iso); setShowDatePicker(false); }}
+          onConfirm={(iso) => { setDate(iso); setShowDatePicker(false); setShowKeypad(true); }}
         />
       )}
 
@@ -344,7 +366,7 @@ export default function AddTransactionScreen({
             onClick={() => { setShowCategoryPicker(false); setEditingCategories(false); }}
           />
 
-          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[320px] relative">
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[440px] relative">
             <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
 
             <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
@@ -371,6 +393,7 @@ export default function AddTransactionScreen({
                       }
                       setCategoryId(c.id);
                       setShowCategoryPicker(false);
+                      openAccountPicker("account");
                     }}
                     className="relative h-14 flex items-center justify-center gap-1.5 px-2.5 border-b border-r border-white/5 text-xs text-gray-200"
                   >
@@ -457,7 +480,7 @@ export default function AddTransactionScreen({
         <div className="absolute inset-0 z-10 flex flex-col justify-end">
           <div className="flex-1" onClick={() => setShowAccountPicker(false)} />
 
-          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[320px] relative">
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[440px] relative">
             <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
 
             <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
@@ -556,16 +579,20 @@ function Row({
   label,
   children,
   onClick,
+  active,
 }: {
   label: string;
   children: React.ReactNode;
   onClick?: () => void;
+  active?: boolean;
 }) {
   const Tag = onClick ? "button" : "div";
   return (
     <Tag
       onClick={onClick}
-      className="w-full flex items-center justify-between py-3 border-b border-white/10 text-left"
+      className={`w-full flex items-center justify-between py-3 border-b text-left transition-colors ${
+        active ? "border-red-500" : "border-white/10"
+      }`}
     >
       <span className="text-gray-400 text-sm">{label}</span>
       <div className="flex-1 max-w-[65%] text-right">{children}</div>

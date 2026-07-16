@@ -289,7 +289,7 @@ export default function Home() {
       {accounts.length > 0 && (
         <button
           onClick={() => setShowAddTxn(true)}
-          className="fixed bottom-24 right-6 z-30 w-14 h-14 rounded-full bg-red-500 text-white shadow-xl flex items-center justify-center hover:bg-red-600"
+          className="fixed bottom-28 right-6 z-30 w-14 h-14 rounded-full bg-red-500 text-white shadow-xl flex items-center justify-center hover:bg-red-600"
         >
           <Plus size={26} />
         </button>
