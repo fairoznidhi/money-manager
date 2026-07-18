@@ -1,10 +1,11 @@
 "use client";
-import { Transaction, Account, Category, fmtUSD } from "@/lib/supabase";
+import { Transaction, Account, Category, Event, fmtUSD } from "@/lib/supabase";
 
 interface Props {
   txns: Transaction[];
   accounts: Account[];
   categories: Category[];
+  events: Event[];
   onSelect: (txn: Transaction) => void;
 }
 
@@ -22,11 +23,14 @@ export default function TransactionHistory({
   txns,
   accounts,
   categories,
+  events,
   onSelect,
 }: Props) {
   const accountName = (id: number | null) =>
     accounts.find((a) => a.id === id)?.name ?? "?";
   const categoryOf = (id: number | null) => categories.find((c) => c.id === id);
+  const eventName = (id: number | null) =>
+    id == null ? undefined : events.find((e) => e.id === id)?.name;
 
   const byDay = new Map<string, Transaction[]>();
   for (const t of txns) {
@@ -84,6 +88,7 @@ export default function TransactionHistory({
                   t.type === "transfer" ? undefined : categoryOf(t.category_id)
                 }
                 accountName={accountName}
+                eventName={eventName(t.event_id)}
                 onSelect={onSelect}
               />
             ))}
@@ -98,11 +103,13 @@ function TxnRow({
   txn,
   category,
   accountName,
+  eventName,
   onSelect,
 }: {
   txn: Transaction;
   category?: Category;
   accountName: (id: number | null) => string;
+  eventName?: string;
   onSelect: (txn: Transaction) => void;
 }) {
   const sign = txn.type === "expense" ? "-" : txn.type === "income" ? "+" : "";
@@ -128,7 +135,14 @@ function TxnRow({
     >
       <span className="w-5 text-center text-sm shrink-0">{icon ?? ""}</span>
       <div className="flex-1 min-w-0">
-        <div className="text-[13px] text-white truncate">{title}</div>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="text-[13px] text-white truncate">{title}</div>
+          {eventName && (
+            <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-gray-300 truncate max-w-[80px]">
+              {eventName}
+            </span>
+          )}
+        </div>
         <div className="text-[11px] text-gray-500 truncate">{subtitle}</div>
       </div>
       {txn.note && (

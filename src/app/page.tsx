@@ -39,6 +39,7 @@ export default function Home() {
     accounts,
     categories,
     allTxns,
+    events,
     loading,
     dbReady,
     refreshTxns,
@@ -46,6 +47,7 @@ export default function Home() {
     onCategoryCreated,
     onCategoryUpdated,
     onAccountCreated,
+    onEventCreated,
   } = useAppData();
 
   const now = new Date();
@@ -238,6 +240,7 @@ export default function Home() {
             txns={monthTxns}
             accounts={accounts}
             categories={categories}
+            events={events}
             onSelect={setEditingTxn}
           />
         )}
@@ -300,11 +303,13 @@ export default function Home() {
         <AddTransactionScreen
           accounts={accounts}
           categories={categories}
+          events={events}
           onClose={() => setShowAddTxn(false)}
           onSaved={handleTxnSaved}
           onCategoryCreated={onCategoryCreated}
           onCategoryUpdated={onCategoryUpdated}
           onAccountCreated={onAccountCreated}
+          onEventCreated={onEventCreated}
         />
       )}
 
@@ -314,6 +319,7 @@ export default function Home() {
           txn={editingTxn}
           accounts={accounts}
           categories={categories}
+          events={events}
           onClose={() => setEditingTxn(null)}
           onSaved={async () => {
             await refreshTxns();
@@ -328,6 +334,7 @@ export default function Home() {
           onCategoryCreated={onCategoryCreated}
           onCategoryUpdated={onCategoryUpdated}
           onAccountCreated={onAccountCreated}
+          onEventCreated={onEventCreated}
         />
       )}
     </div>

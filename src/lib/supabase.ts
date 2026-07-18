@@ -119,9 +119,33 @@ export interface Transaction {
   note: string | null;
   amount: number;
   occurred_at: string; // "YYYY-MM-DD"
+  event_id: number | null;
 }
 
 export type NewTransaction = Omit<Transaction, "id">;
+
+// ---------- Events ----------
+// An event is a self-contained mini-ledger: its own income/expense "entries"
+// live in a jsonb column, not as rows in `transactions`, and never affect
+// account balances. Separately, a real Transaction can carry a nullable
+// event_id as a pure tag/reference (see Transaction above).
+export type EventEntryType = "income" | "expense";
+
+export interface EventEntry {
+  id: string; // client-generated (see newLocalId()), not a DB row
+  type: EventEntryType;
+  amount: number;
+  note: string;
+  occurred_at: string; // "YYYY-MM-DD"
+}
+
+export interface Event {
+  id: number;
+  name: string;
+  entries: EventEntry[];
+  event_date: string; // "YYYY-MM-DD", manually set/edited
+  created_at: string;
+}
 
 // ---------- Helpers ----------
 export const ACCOUNT_COLORS = [
@@ -145,6 +169,15 @@ export function fmtUSD(n: number) {
 
 export function parseAmount(val: string): number {
   return parseFloat(val) || 0;
+}
+
+// crypto.randomUUID() requires a secure context and isn't available on all
+// mobile browsers/WebViews, so fall back to a simple random id when missing.
+export function newLocalId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 export function todayStr() {
@@ -257,6 +290,7 @@ export async function matureAccount(
         note: `Matured: ${account.name}`,
         amount: principal,
         occurred_at: occurredAt,
+        event_id: null,
       }),
     );
   }
@@ -272,6 +306,7 @@ export async function matureAccount(
         note: `Interest: ${account.name}`,
         amount: interest,
         occurred_at: occurredAt,
+        event_id: null,
       }),
     );
   }
@@ -341,6 +376,93 @@ export async function updateCategory(
     .from("categories")
     .update(updates)
     .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getEvents(): Promise<Event[]> {
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .order("event_date", { ascending: false })
+    .order("id", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function addEvent(name: string, eventDate: string): Promise<Event> {
+  const { data, error } = await supabase
+    .from("events")
+    .insert({ name, entries: [], event_date: eventDate })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function renameEvent(
+  id: number,
+  updates: { name: string; event_date: string },
+): Promise<Event> {
+  const { data, error } = await supabase
+    .from("events")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteEvent(id: number): Promise<void> {
+  const { error } = await supabase.from("events").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function addEventEntry(
+  event: Event,
+  entry: Omit<EventEntry, "id">,
+): Promise<Event> {
+  const newEntries = [...event.entries, { ...entry, id: newLocalId() }];
+  const { data, error } = await supabase
+    .from("events")
+    .update({ entries: newEntries })
+    .eq("id", event.id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateEventEntry(
+  event: Event,
+  entryId: string,
+  updates: Partial<Omit<EventEntry, "id">>,
+): Promise<Event> {
+  const newEntries = event.entries.map((e) =>
+    e.id === entryId ? { ...e, ...updates } : e,
+  );
+  const { data, error } = await supabase
+    .from("events")
+    .update({ entries: newEntries })
+    .eq("id", event.id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteEventEntry(
+  event: Event,
+  entryId: string,
+): Promise<Event> {
+  const newEntries = event.entries.filter((e) => e.id !== entryId);
+  const { data, error } = await supabase
+    .from("events")
+    .update({ entries: newEntries })
+    .eq("id", event.id)
     .select()
     .single();
   if (error) throw error;
@@ -423,4 +545,32 @@ export function computeBalance(account: Account, txns: Transaction[]): number {
   const base =
     account.type === "card" ? account.credit_limit : account.opening_balance;
   return base + computeMainBalance(account, txns);
+}
+
+export function computeEventEntryTotals(
+  event: Event,
+): { income: number; expense: number; net: number } {
+  const income = event.entries
+    .filter((e) => e.type === "income")
+    .reduce((s, e) => s + e.amount, 0);
+  const expense = event.entries
+    .filter((e) => e.type === "expense")
+    .reduce((s, e) => s + e.amount, 0);
+  return { income, expense, net: income - expense };
+}
+
+export function computeLinkedTxnTotals(
+  event: Event,
+  allTxns: Transaction[],
+): { income: number; expense: number; net: number } {
+  const linked = allTxns.filter(
+    (t) => t.event_id === event.id && t.type !== "transfer",
+  );
+  const income = linked
+    .filter((t) => t.type === "income")
+    .reduce((s, t) => s + t.amount, 0);
+  const expense = linked
+    .filter((t) => t.type === "expense")
+    .reduce((s, t) => s + t.amount, 0);
+  return { income, expense, net: income - expense };
 }

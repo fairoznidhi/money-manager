@@ -6,6 +6,7 @@ import {
   AccountType,
   Category,
   Transaction,
+  Event,
   ACCOUNT_GROUPS,
   ACCOUNT_COLORS,
   computeBalance,
@@ -25,6 +26,7 @@ interface Props {
   accounts: Account[];
   allTxns: Transaction[];
   categories: Category[];
+  events: Event[];
   onAccountCreated: (account: Account) => void;
   onAccountUpdated: (account: Account) => void;
   onAccountsReordered: (accounts: Account[]) => void;
@@ -33,6 +35,7 @@ interface Props {
   showToast: (msg: string) => void;
   onCategoryCreated: (category: Category) => void;
   onCategoryUpdated: (category: Category) => void;
+  onEventCreated: (event: Event) => void;
   showAdd: boolean;
   onCloseAdd: () => void;
   editMode: boolean;
@@ -49,6 +52,7 @@ export default function AccountsScreen({
   accounts,
   allTxns,
   categories,
+  events,
   onAccountCreated,
   onAccountUpdated,
   onAccountsReordered,
@@ -57,6 +61,7 @@ export default function AccountsScreen({
   showToast,
   onCategoryCreated,
   onCategoryUpdated,
+  onEventCreated,
   showAdd,
   onCloseAdd,
   editMode,
@@ -377,6 +382,7 @@ export default function AccountsScreen({
           allTxns={allTxns}
           accounts={accounts}
           categories={categories}
+          events={events}
           onClose={() => setViewingAccount(null)}
           onEdit={() => {
             setEditingAccount(viewingAccount);
@@ -387,6 +393,7 @@ export default function AccountsScreen({
           onCategoryCreated={onCategoryCreated}
           onCategoryUpdated={onCategoryUpdated}
           onAccountCreated={onAccountCreated}
+          onEventCreated={onEventCreated}
         />
       )}
     </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { ChevronLeft, Pencil } from "lucide-react";
-import { Account, Category, Transaction } from "@/lib/supabase";
+import { Account, Category, Transaction, Event } from "@/lib/supabase";
 import TransactionHistory from "@/components/TransactionHistory";
 import EditTransactionScreen from "@/components/EditTransactionScreen";
 
@@ -10,6 +10,7 @@ interface Props {
   allTxns: Transaction[];
   accounts: Account[];
   categories: Category[];
+  events: Event[];
   onClose: () => void;
   onEdit: () => void;
   refreshTxns: () => Promise<void>;
@@ -17,6 +18,7 @@ interface Props {
   onCategoryCreated: (category: Category) => void;
   onCategoryUpdated: (category: Category) => void;
   onAccountCreated: (account: Account) => void;
+  onEventCreated: (event: Event) => void;
 }
 
 export default function AccountTransactionScreen({
@@ -24,6 +26,7 @@ export default function AccountTransactionScreen({
   allTxns,
   accounts,
   categories,
+  events,
   onClose,
   onEdit,
   refreshTxns,
@@ -31,6 +34,7 @@ export default function AccountTransactionScreen({
   onCategoryCreated,
   onCategoryUpdated,
   onAccountCreated,
+  onEventCreated,
 }: Props) {
   const [editingTxn, setEditingTxn] = useState<Transaction | null>(null);
 
@@ -67,6 +71,7 @@ export default function AccountTransactionScreen({
           txns={txns}
           accounts={accounts}
           categories={categories}
+          events={events}
           onSelect={setEditingTxn}
         />
       </div>
@@ -76,6 +81,7 @@ export default function AccountTransactionScreen({
           txn={editingTxn}
           accounts={accounts}
           categories={categories}
+          events={events}
           onClose={() => setEditingTxn(null)}
           onSaved={async () => {
             await refreshTxns();
@@ -90,6 +96,7 @@ export default function AccountTransactionScreen({
           onCategoryCreated={onCategoryCreated}
           onCategoryUpdated={onCategoryUpdated}
           onAccountCreated={onAccountCreated}
+          onEventCreated={onEventCreated}
         />
       )}
     </div>

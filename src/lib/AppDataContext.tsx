@@ -4,10 +4,13 @@ import {
   Account,
   Category,
   Transaction,
+  Event,
   getAccounts,
   getCategories,
   getAllTransactions,
+  getEvents,
   deleteTransaction,
+  deleteEvent,
   matureAccount,
 } from "@/lib/supabase";
 
@@ -15,6 +18,7 @@ interface AppData {
   accounts: Account[];
   categories: Category[];
   allTxns: Transaction[];
+  events: Event[];
   loading: boolean;
   dbReady: boolean | null;
   toast: string;
@@ -27,6 +31,9 @@ interface AppData {
   onAccountUpdated: (account: Account) => void;
   onAccountsReordered: (accounts: Account[]) => void;
   onAccountRemoved: (id: number) => void;
+  onEventCreated: (event: Event) => void;
+  onEventUpdated: (event: Event) => void;
+  removeEvent: (id: number) => Promise<void>;
   matureSavingsAccount: (
     account: Account,
     destinationAccountId: number,
@@ -42,6 +49,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [allTxns, setAllTxns] = useState<Transaction[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const [dbReady, setDbReady] = useState<boolean | null>(null);
   const [toast, setToast] = useState("");
@@ -53,14 +61,16 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   async function init() {
     setLoading(true);
     try {
-      const [accs, cats, txns] = await Promise.all([
+      const [accs, cats, txns, evts] = await Promise.all([
         getAccounts(),
         getCategories(),
         getAllTransactions(),
+        getEvents(),
       ]);
       setAccounts(accs);
       setCategories(cats);
       setAllTxns(txns);
+      setEvents(evts);
       setDbReady(true);
     } catch {
       setDbReady(false);
@@ -116,6 +126,25 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     setAccounts((prev) => prev.filter((a) => a.id !== id));
   }
 
+  function onEventCreated(event: Event) {
+    setEvents((prev) => [event, ...prev]);
+  }
+
+  function onEventUpdated(event: Event) {
+    setEvents((prev) => prev.map((e) => (e.id === event.id ? event : e)));
+  }
+
+  async function removeEvent(id: number) {
+    try {
+      await deleteEvent(id);
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      await refreshTxns();
+      showToast("Event deleted");
+    } catch {
+      showToast("Failed to delete event");
+    }
+  }
+
   async function matureSavingsAccount(
     account: Account,
     destinationAccountId: number,
@@ -143,6 +172,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         accounts,
         categories,
         allTxns,
+        events,
         loading,
         dbReady,
         toast,
@@ -155,6 +185,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         onAccountUpdated,
         onAccountsReordered,
         onAccountRemoved,
+        onEventCreated,
+        onEventUpdated,
+        removeEvent,
         matureSavingsAccount,
       }}
     >

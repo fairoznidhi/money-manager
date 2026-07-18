@@ -114,15 +114,44 @@ do $$ begin
     check (type = 'transfer' or category_id is not null);
 end $$;
 
+-- Table 4: events — a self-contained mini-ledger. The "entries" jsonb column
+-- holds the event's own income/expense lines; these are NOT rows in
+-- transactions and never touch account balances.
+-- entries shape (client-validated): [{ id: uuid, type: "income"|"expense", amount: number, note: string, occurred_at: "YYYY-MM-DD" }]
+create table if not exists events (
+  id         bigserial primary key,
+  name       text not null,
+  entries    jsonb not null default '[]'::jsonb,
+  event_date date not null default current_date,
+  created_at timestamptz default now()
+);
+
+-- Patch older versions of the events table that predate event_date.
+alter table events add column if not exists event_date date not null default current_date;
+
+-- Nullable tag from a real transaction to an event (pure reference, does not
+-- affect the transaction's own fields). on delete set null so deleting an
+-- event never blocks or orphans real transactions.
+alter table transactions add column if not exists event_id bigint references events(id) on delete set null;
+
+do $$ begin
+  alter table transactions drop constraint if exists transactions_event_id_fkey;
+  alter table transactions add constraint transactions_event_id_fkey
+    foreign key (event_id) references events(id) on delete set null;
+end $$;
+
 -- Allow public read/write (no login needed for this app)
 alter table accounts enable row level security;
 alter table categories enable row level security;
 alter table transactions enable row level security;
+alter table events enable row level security;
 
 drop policy if exists "allow all accounts" on accounts;
 drop policy if exists "allow all categories" on categories;
 drop policy if exists "allow all transactions" on transactions;
+drop policy if exists "allow all events" on events;
 
 create policy "allow all accounts" on accounts for all using (true) with check (true);
 create policy "allow all categories" on categories for all using (true) with check (true);
 create policy "allow all transactions" on transactions for all using (true) with check (true);
+create policy "allow all events" on events for all using (true) with check (true);

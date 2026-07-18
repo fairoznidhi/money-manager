@@ -6,9 +6,11 @@ import {
   Category,
   CategoryType,
   TransactionType,
+  Event,
   ACCOUNT_GROUPS,
   addAccount,
   addCategory,
+  addEvent,
   addTransaction,
   updateCategory,
   parseAmount,
@@ -22,11 +24,14 @@ import DatePicker from "@/components/DatePicker";
 interface Props {
   accounts: Account[];
   categories: Category[];
+  events: Event[];
   onClose: () => void;
   onSaved: () => void;
   onCategoryCreated: (category: Category) => void;
   onCategoryUpdated: (category: Category) => void;
   onAccountCreated: (account: Account) => void;
+  onEventCreated: (event: Event) => void;
+  initialEvent?: Event;
 }
 
 const TABS: { type: TransactionType; label: string; activeClass: string }[] = [
@@ -56,11 +61,14 @@ function emptyForm() {
 export default function AddTransactionScreen({
   accounts,
   categories,
+  events,
   onClose,
   onSaved,
   onCategoryCreated,
   onCategoryUpdated,
   onAccountCreated,
+  onEventCreated,
+  initialEvent,
 }: Props) {
   const [tab, setTab] = useState<TransactionType>("expense");
   const [date, setDate] = useState(todayStr());
@@ -70,6 +78,13 @@ export default function AddTransactionScreen({
   const [toAccountId, setToAccountId] = useState<number | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [eventId, setEventId] = useState<number | null>(initialEvent?.id ?? null);
+  const [showEventPicker, setShowEventPicker] = useState(false);
+  const [showNewEvent, setShowNewEvent] = useState(false);
+  const [newEventName, setNewEventName] = useState("");
+  const [savingEvent, setSavingEvent] = useState(false);
+  const [localEvents, setLocalEvents] = useState(events);
 
   const [showKeypad, setShowKeypad] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -103,12 +118,14 @@ export default function AddTransactionScreen({
     setNote(f.note);
     setDate(todayStr());
     setToAccountId(null);
+    setEventId(initialEvent?.id ?? null);
   }
 
   const tabCategories = localCategories.filter((c) => c.type === tab);
   const selectedCategory = localCategories.find((c) => c.id === categoryId);
   const selectedAccount = localAccounts.find((a) => a.id === accountId);
   const selectedToAccount = localAccounts.find((a) => a.id === toAccountId);
+  const selectedEvent = localEvents.find((e) => e.id === eventId);
 
   const canSave =
     parseAmount(amount) > 0 &&
@@ -127,6 +144,7 @@ export default function AddTransactionScreen({
       note: note.trim() || null,
       amount: parseAmount(amount),
       occurred_at: date,
+      event_id: tab === "transfer" ? null : eventId,
     });
   }
 
@@ -195,10 +213,33 @@ export default function AddTransactionScreen({
       setAccountId(id);
       setShowAccountPicker(false);
       if (tab === "transfer") openAccountPicker("to");
+      else setShowEventPicker(true);
     } else {
       setToAccountId(id);
       setShowAccountPicker(false);
     }
+  }
+
+  function chooseEvent(id: number | null) {
+    setEventId(id);
+    setShowEventPicker(false);
+  }
+
+  async function handleCreateEvent() {
+    const name = newEventName.trim();
+    if (!name || savingEvent) return;
+    setSavingEvent(true);
+    try {
+      const ev = await addEvent(name, todayStr());
+      setLocalEvents([...localEvents, ev]);
+      chooseEvent(ev.id);
+      setNewEventName("");
+      setShowNewEvent(false);
+      onEventCreated(ev);
+    } catch {
+      // stay on form, allow retry
+    }
+    setSavingEvent(false);
   }
 
   async function handleCreateAccount() {
@@ -301,6 +342,12 @@ export default function AddTransactionScreen({
             >
               <span className="text-base text-white">
                 {selectedAccount?.name ?? <span className="text-gray-600">Select</span>}
+              </span>
+            </Row>
+
+            <Row label="Event" onClick={() => setShowEventPicker(true)} active={showEventPicker}>
+              <span className="text-base text-white">
+                {selectedEvent?.name ?? <span className="text-gray-600">None</span>}
               </span>
             </Row>
           </>
@@ -566,6 +613,91 @@ export default function AddTransactionScreen({
                 className="px-4 py-2.5 rounded-lg bg-blue-600 text-white font-bold disabled:opacity-40"
               >
                 {savingAccount ? "Adding..." : "Add"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Event picker overlay */}
+      {showEventPicker && (
+        <div className="absolute inset-0 z-10 flex flex-col justify-end">
+          <div className="flex-1" onClick={() => setShowEventPicker(false)} />
+
+          <div className="bg-[#2c2c2e] rounded-t-2xl flex flex-col shrink-0 shadow-2xl h-[380px] relative">
+            <div className="w-9 h-1 rounded-full bg-white/20 absolute left-1/2 -translate-x-1/2 top-1.5" />
+
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10 shrink-0">
+              <h2 className="text-lg text-gray-200">Event</h2>
+              <button onClick={() => setShowEventPicker(false)} className="text-gray-300">
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <button
+                onClick={() => chooseEvent(null)}
+                className="w-full text-left px-4 py-3 border-b border-white/5 text-sm text-gray-400"
+              >
+                None
+              </button>
+              {localEvents.map((ev) => (
+                <button
+                  key={ev.id}
+                  onClick={() => chooseEvent(ev.id)}
+                  className="w-full text-left px-4 py-3 border-b border-white/5 text-sm text-gray-200"
+                >
+                  {ev.name}
+                </button>
+              ))}
+              <button
+                onClick={() => { setNewEventName(""); setShowNewEvent(true); }}
+                className="w-full flex items-center gap-1.5 px-4 py-3 border-b border-white/5 text-sm text-gray-400"
+              >
+                <Plus size={14} />
+                <span>New</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New event modal */}
+      {showNewEvent && (
+        <div
+          className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 px-4"
+          onClick={() => { if (!savingEvent) setShowNewEvent(false); }}
+        >
+          <div
+            className="bg-[#2c2c2e] rounded-2xl p-6 w-full max-w-sm"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold mb-4">New event</h3>
+            <div className="mb-5">
+              <label className="text-sm text-gray-400 block mb-1">Name</label>
+              <input
+                type="text"
+                value={newEventName}
+                onChange={(e) => setNewEventName(e.target.value)}
+                placeholder="e.g. Bali Trip"
+                disabled={savingEvent}
+                className="w-full text-base px-3 py-2.5 rounded-lg bg-[#1c1c1e] border border-white/10 text-white outline-none disabled:opacity-60"
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowNewEvent(false)}
+                disabled={savingEvent}
+                className="px-4 py-2.5 rounded-lg border border-white/15 text-gray-300 disabled:opacity-40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateEvent}
+                disabled={!newEventName.trim() || savingEvent}
+                className="px-4 py-2.5 rounded-lg bg-blue-600 text-white font-bold disabled:opacity-40"
+              >
+                {savingEvent ? "Adding..." : "Add"}
               </button>
             </div>
           </div>

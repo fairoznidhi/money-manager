@@ -11,6 +11,7 @@ export default function AccountsPage() {
     accounts,
     categories,
     allTxns,
+    events,
     dbReady,
     refreshTxns,
     showToast,
@@ -20,6 +21,7 @@ export default function AccountsPage() {
     onAccountRemoved,
     onCategoryCreated,
     onCategoryUpdated,
+    onEventCreated,
     matureSavingsAccount,
   } = useAppData();
   const [showAddAccount, setShowAddAccount] = useState(false);
@@ -157,6 +159,7 @@ export default function AccountsPage() {
           accounts={accounts}
           allTxns={allTxns}
           categories={categories}
+          events={events}
           onAccountCreated={onAccountCreated}
           onAccountUpdated={onAccountUpdated}
           onAccountsReordered={onAccountsReordered}
@@ -165,6 +168,7 @@ export default function AccountsPage() {
           showToast={showToast}
           onCategoryCreated={onCategoryCreated}
           onCategoryUpdated={onCategoryUpdated}
+          onEventCreated={onEventCreated}
           showAdd={showAddAccount}
           onCloseAdd={() => setShowAddAccount(false)}
           editMode={editMode}
